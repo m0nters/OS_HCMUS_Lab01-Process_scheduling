@@ -1,0 +1,82 @@
+hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì add cái nào vào queue cũng được (nhưng thường các tiến trình sẽ có arrival_time khác nhau nên không phải lo)
+
+ta đặt vấn đề phức tạp hơn:
+giả sử có nhiều R nhưng chỉ có 1 CPU, có nhiều tiến trình từ nhiều R được add vào ready queue cùng một lúc và đang tranh chấp -> lý thuyết: ưu tiên cái nào ra khỏi CPU lần cuối cùng sớm nhất đi vào, còn nếu có n tiến trình từ n R khác nhau, ra khỏi CPU cùng một lúc và còn lại được add vào ready queue tại cùng thời điểm luôn (hiếm) thì add cái nào cũng được
+
+code => có thể tạo "map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời gian tiến trình ra khỏi CPU, còn tham số còn lại là lưu con trỏ tiến trình
+tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0) thì insert ngay vào "map<Process*, int> last_out_cpu_time"
+
+ở mỗi loop while, nếu có tiến trình nào từ R nào đó từ CPU lại, tìm kết quả tiến trình đó trong map "out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority", xóa kết quả trong map "out_cpu_time" đi để chuẩn bị cho lần add tiếp theo của process đó vào map (nếu có)
+
+lúc này tua lên đầu loop while phần add vào ready_queue, sort vector priority theo thời gian sớm nhất ra khỏi CPU (tức thứ tự tăng dần), từ đó phần tử đầu tiên là tiến trình ra khỏi CPU sớm nhất
+duyệt vector, add priority[i].second vào CPU_queue, sau khi duyệt xong vector thì clear nó đi, chuẩn bị cho những lần add vào vector của lượt loop mới
+====================================================
+====================================================
+1 
+4
+0 5 3 2 4
+2 7 6 9
+3 3 2 1
+5 5 1 3
+
+// FCFS chỉ có thể conflict ready queue tối đa 2 cái: cái xuất hiện mới (2), cái từ I/O đẩy qua (1)
+// conflict 2 cái giây thứ 6
+
+input:
+1
+3
+0 1 5 1
+3 3
+6 2
+output:
+1 _ _ 2 2 2 3 3 1 
+_ 1 1 1 1 1 
+9 3 2 
+2 0 0 
+
+
+
+// RR chỉ có thể conflict tối đa 3 cái: cái xuất hiện mới (3), cái đẩy từ I/O qua (2), cái hết hạn time slice (1)
+// nguyên nhân có priority trên: cái nào mà lần cuối sử dụng CPU càng sớm, thì khi add vào ready queue tính là càng mới
+// conflict 3 cái giây thứ 6
+
+input:
+2
+3
+3
+0 1 5 4
+3 7 3
+6 3 3
+output:
+1 _ _ 2 2 2 3 3 3 1 1 1 2 2 2 1 2 
+_ 1 1 1 1 1 _ _ _ 3 3 3 _ _ _ _ _ 2 2 2 
+16 17 6 
+6 7 0 
+
+
+
+// SJF chỉ có thể conflict tối đa 2 cái: cái xuất hiện mới (2), cái đẩy từ I/O qua (1)
+input:
+3
+3
+0 1 5 4
+3 7 3
+6 3 3
+output:
+1 _ _ 2 2 2 2 2 2 2 3 3 3 1 1 1 1 
+_ 1 1 1 1 1 _ _ _ _ 2 2 2 3 3 3 
+17 10 10 
+7 0 4 
+
+// SRTN có thể conflict ready queue tối đa 3 cái: cái xuất hiện mới (3), cái đẩy từ I/O qua (2), cái hiện tại bị interupt và đẩy vào ready queue (1)
+input:
+4
+3
+0 1 5 2
+3 5
+6 2
+output:
+1 _ _ 2 2 2 3 3 1 1 2 2 
+_ 1 1 1 1 1 
+10 9 2 
+2 4 0 
