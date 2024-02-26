@@ -15,9 +15,9 @@ void FCFS(vector<Process> processes, ostream& os) {
 	Process* cumulative_CPU_used_process = NULL; // conflict resolve: NEW PROCESS IS PRIORITIZED TO BE ADDED INTO CPU_QUEUE
 
 	int finished_processes_num = 0; // the number of the processes that have finished
-	vector<int> last_time_put_into_CPU_queue(processes.size()); // for waiting time calculation
+	unordered_map<Process*, int> last_time_put_into_CPU_queue; // for waiting time calculation
 	for (int i = 0; i < processes.size(); ++i)
-		last_time_put_into_CPU_queue[processes[i].id - 1] = processes[i].arrival_time;
+		last_time_put_into_CPU_queue[&processes[i]] = processes[i].arrival_time;
 
 	int process_count = 0; // optimization: avoid abundant check to add into ready queue, reduce O(n)
 	while (finished_processes_num != processes.size()) {
@@ -37,7 +37,7 @@ void FCFS(vector<Process> processes, ostream& os) {
 		if (!current_CPU_used_process && !CPU_queue.empty()) { // if there isn't any process running in the CPU right now
 			current_CPU_used_process = CPU_queue.front(); // pick the next one waiting in the queue (if the queue is not empty)
 			CPU_queue.pop();
-			current_CPU_used_process->waiting_time += time - last_time_put_into_CPU_queue[current_CPU_used_process->id - 1];
+			current_CPU_used_process->waiting_time += time - last_time_put_into_CPU_queue[current_CPU_used_process];
 		}
 
 		// take the next process in R_queue to work with
@@ -76,7 +76,7 @@ void FCFS(vector<Process> processes, ostream& os) {
 
 			if (!current_R_usage_time) {
 				current_R_used_process->resource_usage_time.pop();
-				last_time_put_into_CPU_queue[index] = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
+				last_time_put_into_CPU_queue[current_R_used_process] = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
 				if (!current_R_used_process->CPU_burst_time.empty()) // check if there's next cpu, if have, put into CPU_ready_queue, ALSO CHECK FOR CONFLICT IN THE NEXT SECOND
 					cumulative_CPU_used_process = current_R_used_process;
 				else { // otherwise, the process is done! now we can calculate the turn around time

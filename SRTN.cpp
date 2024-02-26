@@ -14,9 +14,9 @@ void SRTN(vector<Process> processes, ostream& os) {
 	Process* current_R_used_process = NULL;
 
 	int finished_processes_num = 0; // the number of the processes that have finished
-	vector<int> last_time_put_into_CPU_queue(processes.size()); // for waiting time calculation
+	unordered_map<Process*, int> last_time_put_into_CPU_queue; // for waiting time calculation
 	for (int i = 0; i < processes.size(); ++i)
-		last_time_put_into_CPU_queue[processes[i].id - 1] = processes[i].arrival_time;
+		last_time_put_into_CPU_queue[&processes[i]] = processes[i].arrival_time;
 
 	int process_count = 0; // optimization: avoid abundant check to add into ready queue, reduce O(n)
 	while (finished_processes_num != processes.size()) {
@@ -35,7 +35,7 @@ void SRTN(vector<Process> processes, ostream& os) {
 			// IMMEDIATELY terminate the current process by pushing it into queue
 			current_CPU_used_process->priority = 1; // LOWEST PRIORITY (1)
 			CPU_queue.push(current_CPU_used_process);
-			last_time_put_into_CPU_queue[current_CPU_used_process->id - 1] = time; // not +1 because in this case we need the first end of the time block
+			last_time_put_into_CPU_queue[current_CPU_used_process] = time; // not +1 because in this case we need the first end of the time block
 			current_CPU_used_process = NULL;
 
 		}
@@ -44,7 +44,7 @@ void SRTN(vector<Process> processes, ostream& os) {
 		if (!current_CPU_used_process && !CPU_queue.empty()) {
 			current_CPU_used_process = CPU_queue.top();
 			CPU_queue.pop();
-			current_CPU_used_process->waiting_time += time - last_time_put_into_CPU_queue[current_CPU_used_process->id - 1];
+			current_CPU_used_process->waiting_time += time - last_time_put_into_CPU_queue[current_CPU_used_process];
 		}
 
 		// take the next process in R_queue to work with
@@ -83,7 +83,7 @@ void SRTN(vector<Process> processes, ostream& os) {
 
 			if (!current_R_usage_time) {
 				current_R_used_process->resource_usage_time.pop();
-				last_time_put_into_CPU_queue[index] = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
+				last_time_put_into_CPU_queue[current_R_used_process] = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
 				if (!current_R_used_process->CPU_burst_time.empty()) { // check if there's next cpu, if have, put into CPU_ready_queue, ALSO CHECK FOR CONFLICT IN THE NEXT SECOND
 					current_R_used_process->priority = 2; // MEDIUM PRIORITY (2)
 					CPU_queue.push(current_R_used_process);

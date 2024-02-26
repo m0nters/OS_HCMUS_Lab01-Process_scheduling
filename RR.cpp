@@ -16,9 +16,9 @@ void RR(vector<Process> processes, const int& quantum, ostream& os) {
 	Process* cumulative_CPU_used_process_1 = NULL; // lower priority
 
 	int finished_processes_num = 0; // the number of the processes that have finished
-	vector<int> last_time_put_into_CPU_queue(processes.size()); // for waiting time calculation
+	unordered_map<Process*, int> last_time_put_into_CPU_queue; // for waiting time calculation
 	for (int i = 0; i < processes.size(); ++i)
-		last_time_put_into_CPU_queue[processes[i].id - 1] = processes[i].arrival_time;
+		last_time_put_into_CPU_queue[&processes[i]] = processes[i].arrival_time;
 
 	int process_count = 0; // optimization: avoid abundant check to add into ready queue, reduce O(n)
 	int time_slice;
@@ -44,7 +44,7 @@ void RR(vector<Process> processes, const int& quantum, ostream& os) {
 			time_slice = quantum;
 			current_CPU_used_process = CPU_queue.front(); // pick the next one waiting in the queue (if the queue is not empty)
 			CPU_queue.pop();
-			current_CPU_used_process->waiting_time += time - last_time_put_into_CPU_queue[current_CPU_used_process->id - 1];
+			current_CPU_used_process->waiting_time += time - last_time_put_into_CPU_queue[current_CPU_used_process];
 		}
 
 		// take the next process in R_queue to work with
@@ -73,7 +73,7 @@ void RR(vector<Process> processes, const int& quantum, ostream& os) {
 			}
 			else if (!time_slice) { // put into CPU_queue
 				cumulative_CPU_used_process_1 = current_CPU_used_process;
-				last_time_put_into_CPU_queue[index] = time + 1; // for example time is 7 but IN FACT the time the process be put into ready queue is 8! since we are considering time as BLOCKS!
+				last_time_put_into_CPU_queue[current_CPU_used_process] = time + 1; // for example time is 7 but IN FACT the time the process be put into ready queue is 8! since we are considering time as BLOCKS!
 				current_CPU_used_process = NULL;
 			}
 		}
@@ -89,7 +89,7 @@ void RR(vector<Process> processes, const int& quantum, ostream& os) {
 
 			if (!current_R_usage_time) {
 				current_R_used_process->resource_usage_time.pop();
-				last_time_put_into_CPU_queue[index] = time + 1;
+				last_time_put_into_CPU_queue[current_R_used_process] = time + 1;
 				if (!current_R_used_process->CPU_burst_time.empty()) // check if there's next cpu, if have, put into CPU_ready_queue
 					cumulative_CPU_used_process_2 = current_R_used_process;
 				else { // otherwise, the process is done! now we can calculate the turn around time
