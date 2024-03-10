@@ -1,15 +1,17 @@
 hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì add cái nào vào queue cũng được (nhưng thường các tiến trình sẽ có arrival_time khác nhau nên không phải lo)
 
 ta đặt vấn đề phức tạp hơn:
-giả sử có nhiều R nhưng chỉ có 1 CPU, có nhiều tiến trình từ nhiều R được add vào ready queue cùng một lúc và đang tranh chấp -> lý thuyết: ưu tiên cái nào ra khỏi CPU lần cuối cùng sớm nhất đi vào, còn nếu có n tiến trình từ n R khác nhau, ra khỏi CPU cùng một lúc và còn lại được add vào ready queue tại cùng thời điểm luôn (hiếm) thì add cái nào cũng được
+giả sử có nhiều R nhưng chỉ có 1 CPU, có nhiều tiến trình từ m R được add vào ready queue cùng một lúc và đang có n tiến trình tranh chấp 
+
+-> lý thuyết: ưu tiên cái nào ra khỏi CPU lần cuối cùng sớm nhất đi vào, còn nếu có n tiến trình từ n R khác nhau, ra khỏi CPU cùng một lúc và còn lại được add vào ready queue tại cùng thời điểm luôn (hiếm) thì add cái nào cũng được
 
 code => có thể tạo "map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời gian tiến trình ra khỏi CPU, còn tham số còn lại là lưu con trỏ tiến trình
 tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0) thì insert ngay vào "map<Process*, int> last_out_cpu_time"
 
-ở mỗi loop while, nếu có tiến trình nào từ R nào đó từ CPU lại, tìm kết quả tiến trình đó trong map "out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority", xóa kết quả trong map "out_cpu_time" đi để chuẩn bị cho lần add tiếp theo của process đó vào map (nếu có)
+ở mỗi loop while, nếu có tiến trình nào từ R nào đó từ CPU lại, tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority", xóa kết quả trong map "last_out_cpu_time" đi để chuẩn bị cho lần add tiếp theo của process đó vào map (nếu có)
 
 lúc này tua lên đầu loop while phần add vào ready_queue, sort vector priority theo thời gian sớm nhất ra khỏi CPU (tức thứ tự tăng dần), từ đó phần tử đầu tiên là tiến trình ra khỏi CPU sớm nhất
-duyệt vector, add priority[i].second vào CPU_queue, sau khi duyệt xong vector thì clear nó đi, chuẩn bị cho những lần add vào vector của lượt loop mới
+duyệt vector, add priority[i].first vào CPU_queue, sau khi duyệt xong vector thì clear nó đi, chuẩn bị cho những lần add vào vector của lượt loop mới
 ====================================================
 ====================================================
 1 
