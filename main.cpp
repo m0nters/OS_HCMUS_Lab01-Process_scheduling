@@ -4,13 +4,13 @@
 #include "Header.h"
 
 int main(int argc, char* argv[]) {
-	//if (argc != 3) {
-	//	cout << "Usage: " << argv[0] << " <INPUT_FILE> <OUTPUT_FILE>" << endl;
-	//	return 1;
-	//}
+	if (argc != 3) {
+		cout << "Usage: " << argv[0] << " <INPUT_FILE> <OUTPUT_FILE>" << endl;
+		return 1;
+	}
 
-	ifstream input_file("input.txt");
-	ofstream output_file("output.txt");
+	ifstream input_file(argv[1]);
+	ofstream output_file(argv[2]);
 
 	if (!input_file.is_open() || !output_file.is_open()) {
 		cout << "Error opening files." << endl;
