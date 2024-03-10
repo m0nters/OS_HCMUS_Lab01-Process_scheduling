@@ -1,6 +1,6 @@
 #include "Header.h"
 
-void RR(vector<Process> processes, const int& quantum, ostream& os) {
+void RR(vector<Process>& processes, const int& quantum, ostream& os) {
 	int time = 0;
 
 	// gantt chart for the result

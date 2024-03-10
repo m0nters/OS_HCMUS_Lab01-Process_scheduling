@@ -35,9 +35,9 @@ struct comparator { // TOOL FOR PRIORITY_QUEUE PROBLEMS
 
 
 void readFile(istream& is, int& algorithm_type, int& num_of_process, vector <Process>& processes, int& quantum);
-void writeFile(ostream& os, vector <Process> processes, vector <string> CPU_chart, vector <string> R_chart);
+void writeFile(ostream& os, vector<Process>& processes, vector<string>& CPU_chart, vector<string>& R_chart);
 
-void FCFS(vector<Process> processes, ostream& os);
-void RR(vector<Process> processes, const int& quantum, ostream& os);
-void SJF(vector<Process> processes, ostream& os);
-void SRTN(vector<Process> processes, ostream& os);
+void FCFS(vector<Process>& processes, ostream& os);
+void RR(vector<Process>& processes, const int& quantum, ostream& os);
+void SJF(vector<Process>& processes, ostream& os);
+void SRTN(vector<Process>& processes, ostream& os);

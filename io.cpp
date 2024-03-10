@@ -30,13 +30,13 @@ void readFile(istream& is, int& algorithm_type, int& num_of_process, vector <Pro
 		});
 }
 
-void writeFile(ostream& os, vector <Process> processes, vector <string> CPU_chart, vector <string> R_chart) {
+void writeFile(ostream& os, vector<Process>& processes, vector<string>& CPU_chart, vector<string>& R_chart) {
 	// Overall, if the vector resizing is not frequent, the time complexity of the the code below is O(k), 
 	// where k is the number of "_" characters at the end of the CPU_chart vector. However, if resizing occurs frequently, 
 	// the time complexity could be higher, approaching O(n) in the worst case, where n is the size of the vector.
-	while (CPU_chart[CPU_chart.size() - 1] == "_") // dam bao nhung time slot cuoi khong co _
+	while (!CPU_chart.empty() && CPU_chart[CPU_chart.size() - 1] == "_") // dam bao nhung time slot cuoi khong co _
 		CPU_chart.erase(CPU_chart.begin() + CPU_chart.size() - 1);
-	while (R_chart[R_chart.size() - 1] == "_")  // dam bao nhung time slot cuoi khong co _
+	while (!R_chart.empty() && R_chart[R_chart.size() - 1] == "_")  // dam bao nhung time slot cuoi khong co _
 		R_chart.erase(R_chart.begin() + R_chart.size() - 1);
 
 

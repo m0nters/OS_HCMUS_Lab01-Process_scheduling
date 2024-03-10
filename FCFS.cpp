@@ -1,6 +1,6 @@
 #include "Header.h"
 
-void FCFS(vector<Process> processes, ostream& os) {
+void FCFS(vector<Process>& processes, ostream& os) {
 	int time = 0;
 
 	// gantt chart for the result
