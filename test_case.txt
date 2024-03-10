@@ -56,7 +56,7 @@ _ 1 1 1 1 1 _ _ _ 3 3 3 _ _ _ _ _ 2 2 2
 6 7 0 
 
 
-
+// chung cho SJF và SRTN: trong trường hợp có 2 tiến trình với prority = nhau được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau) (điều này chỉ có thể xảy ra khi chúng đều là tiến trình mới xuất hiện), theo quy tắc ưu tiên thời gian thì tiến trình nào được push trước thì được ưu tiên dequeue trước, điều này khá may mắn là đã mặc định cho priority_queue (hoặc ít nhất là đối với C++) nên không cần cài đặt
 // SJF chỉ có thể conflict tối đa 2 cái: cái xuất hiện mới (2), cái đẩy từ I/O qua (1)
 input:
 3
