@@ -19,7 +19,11 @@ struct Process
 	int turn_around_time = 0;
 	int waiting_time = 0;
 
-	int priority = 0; // for priority_queue problems (SRTN & SJF)
+	// for priority_queue problems (SRTN & SJF)
+	struct priority {
+		int cpu = 0;
+		int time = 0;
+	} priority;
 };
 
 struct comparator { // TOOL FOR PRIORITY_QUEUE PROBLEMS
@@ -29,12 +33,14 @@ struct comparator { // TOOL FOR PRIORITY_QUEUE PROBLEMS
 			return a->CPU_burst_time.front() > b->CPU_burst_time.front();
 
 		// If above condition is tie, prioritize based on "priority" values: the higher, the more prioritized
-		return a->priority < b->priority;
+		if (a->priority.cpu != b->priority.cpu)
+			return a->priority.cpu < b->priority.cpu;
+
+		return a->priority.time < b->priority.time; // if they are equal, literally you can choose any one
 	}
 };
 
-
-void readFile(istream& is, int& algorithm_type, int& num_of_process, vector <Process>& processes, int& quantum);
+void readFile(istream& is, int& algorithm_type, int& num_of_process, vector<Process>& processes, int& quantum);
 void writeFile(ostream& os, vector<Process>& processes, vector<string>& CPU_chart, vector<string>& R_chart);
 
 void FCFS(vector<Process>& processes, ostream& os);
