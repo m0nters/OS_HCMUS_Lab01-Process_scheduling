@@ -7,8 +7,8 @@ giả sử có nhiều R, nhiều CPU:
 Vấn đề: Tất cả chúng đang tranh chấp, ưu tiên cái nào?
 
 Cách xử lí:
--> lý thuyết: ưu tiên cái nào mà thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất đi vào. Lúc này m tiến trình từ CPU được add vào CPU cùng một lúc do hết timeslice sẽ có thời điểm cuối cùng ra khỏi CPU = nhau (cùng một thời điểm hết timeslice hoặc bị force dừng và cũng ngay sau đó chúng đều gửi yêu cầu vào ready queue) thì ưu tiên cái nào cũng được
-(việc ưu tiên cái nào cũng được như này có thể khiến cho thời gian turnaround time hay waiting của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình hết timeslice cùng một lúc như vầy thì bổ sung thêm đơn giản ấy mà)
+-> lý thuyết: ưu tiên cái nào mà thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất đi vào. Lúc này m tiến trình từ CPU được add vào CPU cùng một lúc do hết timeslice sẽ có thời điểm cuối cùng ra khỏi CPU = nhau (cùng một thời điểm hết timeslice hoặc bị force dừng và cũng ngay sau đó chúng đều gửi yêu cầu vào ready queue) thì ưu tiên cái nào cũng được. Tương tự từ I/O qua nếu có p tiến trình có thời điểm cuối cùng ra khỏi CPU = nhau thì cũng ưu tiên cái nào trước cũng được.
+(việc ưu tiên cái nào cũng được như này có thể khiến cho thời gian turnaround time hay waiting của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình có thời điểm ra khỏi CPU = nhau như vầy thì bổ sung thêm đơn giản ấy mà)
 
 code => có thể tạo hashmap "unordered_map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời gian tiến trình ra khỏi CPU, còn tham số còn lại là lưu con trỏ tiến trình
 tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0 hoặc hết time_slice hoặc bị force dừng) thì insert tiến trình đó và thời điểm hiện tại ngay vào "unordered_map<Process*, int> last_out_cpu_time"
