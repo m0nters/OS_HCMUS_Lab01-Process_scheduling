@@ -19,24 +19,30 @@ struct Process
 	int turn_around_time = 0;
 	int waiting_time = 0;
 
-	// for priority_queue problems (SRTN & SJF)
-	struct priority {
-		int cpu = 0;
-		int time = 0;
-	} priority;
+	struct {
+		int time_get_in_CPU_queue; 	// this is only needed for new processes added into the ready queue (which both have highest priority by default -- last_out_CPU_time = 0)
+	} priority; // we create struct in case there are some additional priority rules in the future
 };
 
-struct comparator { // TOOL FOR PRIORITY_QUEUE PROBLEMS
-	bool operator()(const Process* a, const Process* b) const {
-		// Prioritize based on the cpu_burst_time_left: the smaller, the more prioritized
+extern unordered_map<Process*, int> last_out_CPU_time; // priority param for every algorithm (VERY IMPORTANT)
+
+struct time_comparator {
+	bool operator()(Process* a, Process* b) {
 		if (a->CPU_burst_time.front() != b->CPU_burst_time.front())
 			return a->CPU_burst_time.front() > b->CPU_burst_time.front();
+		if (last_out_CPU_time[a] != last_out_CPU_time[b])
+			return last_out_CPU_time[a] > last_out_CPU_time[b];
 
-		// If above condition is tie, prioritize based on "priority" values: the higher, the more prioritized
-		if (a->priority.cpu != b->priority.cpu)
-			return a->priority.cpu < b->priority.cpu;
+		return a->priority.time_get_in_CPU_queue < b->priority.time_get_in_CPU_queue; // LIFO rule, like stack
+	}
+};
 
-		return a->priority.time < b->priority.time; // if they are equal, literally you can choose any one
+struct order_comparator {
+	bool operator()(Process* a, Process* b) {
+		if (last_out_CPU_time[a] != last_out_CPU_time[b])
+			return last_out_CPU_time[a] > last_out_CPU_time[b];
+
+		return a->priority.time_get_in_CPU_queue > b->priority.time_get_in_CPU_queue; // FIFO rule, basically this part is like normal queue
 	}
 };
 
