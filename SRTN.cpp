@@ -23,7 +23,8 @@ void SRTN(vector<Process>& processes, ostream& os) {
 		// READY QUEUE CONFLICT RESOLVE
 		for (int i = process_count; i < processes.size(); i++) {
 			if (processes[i].arrival_time == time) {
-				processes[i].priority = 3; // HIGHEST PRIORITY (3)
+				processes[i].priority.cpu = 3; // HIGHEST PRIORITY (3)
+				processes[i].priority.time = time;
 				CPU_queue.push(&processes[i]);
 				++process_count;
 			}
@@ -33,7 +34,7 @@ void SRTN(vector<Process>& processes, ostream& os) {
 		if (current_CPU_used_process && !CPU_queue.empty() && CPU_queue.top()->CPU_burst_time.front() <= current_CPU_used_process->CPU_burst_time.front()) {
 
 			// IMMEDIATELY terminate the current process by pushing it into queue
-			current_CPU_used_process->priority = 1; // LOWEST PRIORITY (1)
+			current_CPU_used_process->priority.cpu = 1; // LOWEST PRIORITY (1)
 			CPU_queue.push(current_CPU_used_process);
 			last_time_put_into_CPU_queue[current_CPU_used_process] = time; // not +1 because in this case we need the first end of the time block
 			current_CPU_used_process = NULL;
@@ -85,7 +86,7 @@ void SRTN(vector<Process>& processes, ostream& os) {
 				current_R_used_process->resource_usage_time.pop();
 				last_time_put_into_CPU_queue[current_R_used_process] = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
 				if (!current_R_used_process->CPU_burst_time.empty()) { // check if there's next cpu, if have, put into CPU_ready_queue, ALSO CHECK FOR CONFLICT IN THE NEXT SECOND
-					current_R_used_process->priority = 2; // MEDIUM PRIORITY (2)
+					current_R_used_process->priority.cpu = 2; // MEDIUM PRIORITY (2)
 					CPU_queue.push(current_R_used_process);
 				}
 				else { // otherwise, the process is done! now we can calculate the turn around time
