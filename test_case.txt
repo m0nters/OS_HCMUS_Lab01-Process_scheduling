@@ -1,17 +1,19 @@
-hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì add cái nào vào queue cũng được (nhưng thường các tiến trình sẽ có arrival_time khác nhau nên không phải lo)
+Xét trường hợp khó nhất -- SRTN, các trường hợp dễ hơn xử lí còn dễ hơn nên ko nói: hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì cái nào có arrival trễ hơn được ưu tiên (luật ưu tiên cái mới). Từ khúc này về sau ta không quan tâm các tiến trình mới xuất hiện mà chỉ quan tâm đến tranh chấp giữa các tiến trình trong nội bộ (các) CPU, R
 
-ta đặt vấn đề phức tạp hơn:
-giả sử có nhiều R nhưng chỉ có 1 CPU, có nhiều tiến trình nội bộ trong CPU, R, không phải tiến trình mới xuất hiện từ m R được add vào ready queue cùng một lúc và đang có n tiến trình tranh chấp
+ta đặt vấn đề phức tạp (tổng quát) hơn:
+giả sử có nhiều R, nhiều CPU:
+- có m tiến trình từ m CPU được add vào ready queue (hết timeslice hoặc bị force dừng) cùng một lúc 
+- có n tiến trình từ n R được add vào ready queue (tức từ I/O đẩy lên) cùng một lúc
+Vấn đề: Tất cả chúng đang tranh chấp, ưu tiên cái nào?
 
--> lý thuyết: ưu tiên cái nào mà lần cuối ra khỏi CPU sớm nhất đi vào, còn nếu có n tiến trình từ n R khác nhau, ra khỏi CPU cùng một lúc và lại được add vào ready queue tại cùng thời điểm luôn (hiếm) thì add cái nào cũng được
+Cách xử lí:
+-> lý thuyết: ưu tiên cái nào mà thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất đi vào. Lúc này m tiến trình từ CPU được add vào CPU cùng một lúc do hết timeslice sẽ có thời điểm cuối cùng ra khỏi CPU = nhau (cùng một thời điểm hết timeslice hoặc bị force dừng và cũng ngay sau đó chúng đều gửi yêu cầu vào ready queue) thì ưu tiên cái nào cũng được
+(việc ưu tiên cái nào cũng được như này có thể khiến cho thời gian turnaround time hay waiting của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình hết timeslice cùng một lúc như vầy thì bổ sung thêm đơn giản ấy mà)
 
 code => có thể tạo hashmap "unordered_map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời gian tiến trình ra khỏi CPU, còn tham số còn lại là lưu con trỏ tiến trình
-tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0) thì insert tiến trình đó và thời điểm hiện tại ngay vào "unordered_map<Process*, int> last_out_cpu_time"
+tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0 hoặc hết time_slice hoặc bị force dừng) thì insert tiến trình đó và thời điểm hiện tại ngay vào "unordered_map<Process*, int> last_out_cpu_time"
 
-ở mỗi loop while, nếu có tiến trình nào từ R nào đó từ CPU lại, tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority"
-
-lúc này tua lên đầu loop while phần add vào ready_queue, sort vector priority theo thời gian sớm nhất ra khỏi CPU (tức thứ tự tăng dần), từ đó phần tử đầu tiên là tiến trình ra khỏi CPU sớm nhất
-duyệt vector, add priority[i].first vào CPU_queue, sau khi duyệt xong vector thì clear nó đi, chuẩn bị cho những lần add vào vector của lượt loop mới
+tua lên đầu mỗi loop while, nếu có tiến trình nào gửi yêu cầu vào ready queue thì tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority, sort vector priority theo thời gian sớm nhất ra khỏi CPU (tức thứ tự thời gian tăng dần), từ đó phần tử đầu tiên là tiến trình ra khỏi CPU sớm nhất (tính dùng priority_queue cho cái này nhưng nghĩ kĩ lại thì độ phức tạp ngang nhau sau khi add/push vào hết các phần tử thôi, đều là O(N.log(N))). Duyệt vector, add các priority[i].first vào CPU_queue (ready queue)
 ====================================================
 ====================================================
 1 
