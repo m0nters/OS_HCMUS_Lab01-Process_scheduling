@@ -66,7 +66,22 @@ _ 1 1 1 1 1 _ _ _ 3 3 3 _ _ _ _ _ 2 2 2
 
 
 // SJF có thể conflict tối đa N cái: (CÁC) cái xuất hiện mới (2), 1 cái đẩy từ I/O qua (1)
-ví dụ tranh chấp 2 cái từ I/O sang tại giây 12
+ví dụ tranh chấp 2 cái từ I/O sang tại giây 8
+input:
+3
+4
+0 4 3 2
+5 1
+6 1 1 2
+7 1
+output:
+1 1 1 1 _ 2 3 4 1 1 3 3 
+_ _ _ _ 1 1 1 3 
+10 1 6 1 
+1 0 2 0 
+
+ví dụ tranh chấp 2 cái mới xuất hiện tại giây 6
++ tranh chấp 2 cái từ I/O sang tại giây 12
 input:
 3
 4
