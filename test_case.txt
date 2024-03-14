@@ -1,21 +1,26 @@
 Xét trường hợp khó nhất -- SRTN, các trường hợp dễ hơn xử lí còn dễ hơn nên ko nói: hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì cái nào có arrival trễ hơn được ưu tiên (luật ưu tiên cái mới). Từ khúc này về sau ta không quan tâm các tiến trình mới xuất hiện mà chỉ quan tâm đến tranh chấp giữa các tiến trình trong nội bộ (các) CPU, R
 
 ta đặt vấn đề phức tạp (tổng quát) hơn:
-giả sử có nhiều R, nhiều CPU:
-- có m tiến trình từ m CPU được add vào ready queue (hết timeslice hoặc bị force dừng) cùng một lúc 
-- có n tiến trình từ n R được add vào ready queue (tức từ I/O đẩy lên) cùng một lúc
+giả sử có nhiều R nhưng chỉ có 1 CPU và có N tiến trình từ N cái R được add vào ready queue (tức từ I/O đẩy lên) cùng một lúc, + thêm trường hợp xấu nhất luôn tức một tiến trình hết timeslice trong CPU (hoặc bị force dừng) cũng gửi yêu cầu vào ready queue
 Vấn đề: Tất cả chúng đang tranh chấp, ưu tiên cái nào?
 
 Cách xử lí:
--> lý thuyết: ưu tiên cái nào mà thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất đi vào. Lúc này m tiến trình từ CPU được add vào CPU cùng một lúc do hết timeslice sẽ có thời điểm cuối cùng ra khỏi CPU = nhau (cùng một thời điểm hết timeslice hoặc bị force dừng và cũng ngay sau đó chúng đều gửi yêu cầu vào ready queue) thì ưu tiên cái nào cũng được. Tương tự từ I/O qua nếu có p tiến trình có thời điểm cuối cùng ra khỏi CPU = nhau thì cũng ưu tiên cái nào trước cũng được.
-(việc ưu tiên cái nào cũng được như này có thể khiến cho thời gian turnaround time hay waiting của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình có thời điểm ra khỏi CPU = nhau như vầy thì bổ sung thêm đơn giản ấy mà)
+-> lý thuyết: ưu tiên cái nào mà thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất đi vào (luật ưu tiên cái cũ), tuy nhiên nếu có P tiến trình có thời-điểm-cuối-cùng-ra-khỏi-CPU = nhau thì cũng ưu tiên cái nào trước cũng được.
+nói thêm: do chỉ có một CPU nên khi một tiến trình trong CPU bị hết timeslice hoặc bị force dừng thì thời-điểm-cuối-cùng-ra-khỏi-CPU của nó cùng vói thời điểm gửi tín hiệu vào ready queue (trễ nhất luôn rồi) nên hiển nhiên nó sẽ bị ưu tiên sau cùng so với tất cả các tiến trình từ I/O qua
 
-code => có thể tạo hashmap "unordered_map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời gian tiến trình ra khỏi CPU, còn tham số còn lại là lưu con trỏ tiến trình
+(việc ưu tiên cái nào cũng được như này có thể khiến cho thời gian turnaround time hay waiting của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình có thời-điểm-cuối-cùng-ra-khỏi-CPU = nhau như vầy thì bổ sung thêm đơn giản ấy mà)
+
+code => có thể tạo hashmap "unordered_map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời-điểm-cuối-cùng-ra-khỏi-CPU của tiến trình, còn tham số còn lại là lưu con trỏ tiến trình
 tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0 hoặc hết time_slice hoặc bị force dừng) thì insert tiến trình đó và thời điểm hiện tại ngay vào "unordered_map<Process*, int> last_out_cpu_time"
 
-tua lên đầu mỗi loop while, nếu có tiến trình nào gửi yêu cầu vào ready queue thì tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority, sort vector priority theo thời gian sớm nhất ra khỏi CPU (tức thứ tự thời gian tăng dần), từ đó phần tử đầu tiên là tiến trình ra khỏi CPU sớm nhất (tính dùng priority_queue cho cái này nhưng nghĩ kĩ lại thì độ phức tạp ngang nhau sau khi add/push vào hết các phần tử thôi, đều là O(N.log(N))). Duyệt vector, add các priority[i].first vào CPU_queue (ready queue)
+tua lên đầu mỗi loop while, nếu có tiến trình nào gửi yêu cầu vào ready queue thì tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority, sort vector priority theo thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất (tức thứ tự thời gian tăng dần), từ đó phần tử đầu tiên khi lấy ra sẽ luôn là tiến trình ra khỏi CPU sớm nhất (tính dùng priority_queue cho cái này nhưng nghĩ kĩ lại thì độ phức tạp ngang nhau vì sau khi add/push vào hết các phần tử thôi thì độ phức tạp cũng là O(N.log(N))). Duyệt vector, add các priority[i].first vào CPU_queue (ready queue)
 ====================================================
 ====================================================
+
+Quy tắc ưu tiên cái mới trong mọi thuật toán hoạt động như sau:
+- khi đẩy tiến trình vào ready queue nếu xảy ra conflict thì tiến trình nào có last_out_CPU_time sớm hơn thì được ưu tiên dequeue ra trước (last_out_CPU_time mặc định của 1 tiến trình khi MỚI ĐƯỢC ADD VÀO ta quy ước là 0 -- tức sớm nhất, mục đích khiến nó giành được quyền ưu tiên dequeue nhất). Giải thích: last_out_CPU_time sớm nhất tức là lần cuối nó sử dụng CPU là quá lâu trước đó, do đó khi vào lại thì nó giống như một người mới nhất vậy
+- trong trường hợp có 2 tiến trình mới xuất hiện được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau, nếu bằng nhau thì lấy cái nào cũng được) sẽ có last_out_CPU_time đều = 0, tiến trình nào được push vào SAU (mới hơn) thì được ưu tiên dequeue trước
+
 1 
 4
 0 5 3 2 4
@@ -58,20 +63,24 @@ _ 1 1 1 1 1 _ _ _ 3 3 3 _ _ _ _ _ 2 2 2
 6 7 0 
 
 
-// chung cho SJF và SRTN: trong trường hợp có 2 tiến trình với prority = nhau được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau, nếu bằng nhau thì lấy cái nào cũng được) (điều này chỉ có thể xảy ra khi chúng đều là tiến trình mới xuất hiện), theo quy tắc ưu tiên thời gian thì tiến trình nào được push vào sau thì được ưu tiên dequeue trước, ta sẽ cần cài đặt thêm biến time.priority cho struct
-// SJF có thể conflict tối đa N cái: (CÁC) cái xuất hiện mới (2), cái đẩy từ I/O qua (1)
+
+
+// SJF có thể conflict tối đa N cái: (CÁC) cái xuất hiện mới (2), 1 cái đẩy từ I/O qua (1)
+ví dụ tranh chấp 2 cái từ I/O sang tại giây 12
 input:
 3
-3
-0 1 5 4
-3 7 3
-6 3 3
+4
+0 1 5 5
+3 3
+6 3 3 5
+5 3
 output:
-1 _ _ 2 2 2 2 2 2 2 3 3 3 1 1 1 1 
-_ 1 1 1 1 1 _ _ _ _ 2 2 2 3 3 3 
-17 10 10 
-7 0 4 
+1 _ _ 2 2 2 3 3 3 4 4 4 1 1 1 1 1 3 3 3 3 3 
+_ 1 1 1 1 1 _ _ _ 3 3 3 
+17 3 16 7 
+6 0 5 4 
 
+tranh chấp 2 cái mới xuất hiện tại giây 8
 input:
 3
 4
@@ -86,7 +95,8 @@ output:
 0 10 3 3 
 
 
-// SRTN như trên, có thể conflict tối đa N cái: (CÁC) cái xuất hiện mới (3), cái đẩy từ I/O qua (2), cái hiện tại bị interupt và đẩy vào ready queue (1)
+// SRTN như trên, có thể conflict tối đa N cái: (CÁC) cái xuất hiện mới (3), 1 cái đẩy từ I/O qua (2), 1 cái hiện tại bị interupt và đẩy vào ready queue (1)
+ví dụ tranh chấp 3 cái tại giây 6: 1 cái mới xuất hiện, 1 cái đẩy từ I/O qua, 1 cái hiện tại bị interupt và đẩy vào ready queue
 input:
 4
 3
@@ -98,3 +108,18 @@ output:
 _ 1 1 1 1 1 
 10 9 2 
 2 4 0 
+
+ví dụ tranh chấp 3 cái ở giây 6: 2 cái mới add vào, cái từ I/O đẩy qua
++ tranh chấp 2 cái từ I/O qua ở giây 12
+input:
+4
+4
+0 4 2 3
+4 2
+4 3
+6 3 3 3
+output:
+1 1 1 1 2 2 4 4 4 3 3 3 1 1 1 4 4 4 
+_ _ _ _ 1 1 _ _ _ 4 4 4 
+15 2 8 12 
+6 0 5 3 
