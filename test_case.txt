@@ -1,14 +1,14 @@
 hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì add cái nào vào queue cũng được (nhưng thường các tiến trình sẽ có arrival_time khác nhau nên không phải lo)
 
 ta đặt vấn đề phức tạp hơn:
-giả sử có nhiều R nhưng chỉ có 1 CPU, có nhiều tiến trình từ m R được add vào ready queue cùng một lúc và đang có n tiến trình tranh chấp 
+giả sử có nhiều R nhưng chỉ có 1 CPU, có nhiều tiến trình nội bộ trong CPU, R, không phải tiến trình mới xuất hiện từ m R được add vào ready queue cùng một lúc và đang có n tiến trình tranh chấp
 
--> lý thuyết: ưu tiên cái nào ra khỏi CPU lần cuối cùng sớm nhất đi vào, còn nếu có n tiến trình từ n R khác nhau, ra khỏi CPU cùng một lúc và còn lại được add vào ready queue tại cùng thời điểm luôn (hiếm) thì add cái nào cũng được
+-> lý thuyết: ưu tiên cái nào mà lần cuối ra khỏi CPU sớm nhất đi vào, còn nếu có n tiến trình từ n R khác nhau, ra khỏi CPU cùng một lúc và lại được add vào ready queue tại cùng thời điểm luôn (hiếm) thì add cái nào cũng được
 
 code => có thể tạo hashmap "unordered_map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời gian tiến trình ra khỏi CPU, còn tham số còn lại là lưu con trỏ tiến trình
-tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0) thì insert ngay vào "unordered_map<Process*, int> last_out_cpu_time"
+tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0) thì insert tiến trình đó và thời điểm hiện tại ngay vào "unordered_map<Process*, int> last_out_cpu_time"
 
-ở mỗi loop while, nếu có tiến trình nào từ R nào đó từ CPU lại, tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority", xóa kết quả trong map "last_out_cpu_time" đi để chuẩn bị cho lần add tiếp theo của process đó vào map (nếu có)
+ở mỗi loop while, nếu có tiến trình nào từ R nào đó từ CPU lại, tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority"
 
 lúc này tua lên đầu loop while phần add vào ready_queue, sort vector priority theo thời gian sớm nhất ra khỏi CPU (tức thứ tự tăng dần), từ đó phần tử đầu tiên là tiến trình ra khỏi CPU sớm nhất
 duyệt vector, add priority[i].first vào CPU_queue, sau khi duyệt xong vector thì clear nó đi, chuẩn bị cho những lần add vào vector của lượt loop mới
@@ -56,7 +56,7 @@ _ 1 1 1 1 1 _ _ _ 3 3 3 _ _ _ _ _ 2 2 2
 6 7 0 
 
 
-// chung cho SJF và SRTN: trong trường hợp có 2 tiến trình với prority = nhau được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau) (điều này chỉ có thể xảy ra khi chúng đều là tiến trình mới xuất hiện), theo quy tắc ưu tiên thời gian thì tiến trình nào được push trước thì được ưu tiên dequeue trước, điều này khá may mắn là đã mặc định cho priority_queue (hoặc ít nhất là đối với C++) nên không cần cài đặt
+// chung cho SJF và SRTN: trong trường hợp có 2 tiến trình với prority = nhau được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau, nếu bằng nhau thì lấy cái nào cũng được) (điều này chỉ có thể xảy ra khi chúng đều là tiến trình mới xuất hiện), theo quy tắc ưu tiên thời gian thì tiến trình nào được push vào sau thì được ưu tiên dequeue trước, ta sẽ cần cài đặt thêm biến time.priority cho struct
 // SJF chỉ có thể conflict tối đa 2 cái: cái xuất hiện mới (2), cái đẩy từ I/O qua (1)
 input:
 3
