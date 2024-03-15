@@ -1,3 +1,9 @@
+Quy tắc ưu tiên cái mới trong mọi thuật toán hoạt động như sau:
+- khi đẩy tiến trình vào ready queue nếu xảy ra conflict thì tiến trình nào có last_out_CPU_time sớm hơn thì được ưu tiên dequeue ra trước (last_out_CPU_time mặc định của 1 tiến trình khi MỚI ĐƯỢC ADD VÀO ta quy ước là 0 -- tức sớm nhất, mục đích khiến nó giành được quyền ưu tiên dequeue nhất). Giải thích: last_out_CPU_time sớm nhất tức là lần cuối nó sử dụng CPU là quá lâu trước đó, do đó khi vào lại thì nó giống như một người mới nhất vậy
+- trong trường hợp có 2 tiến trình mới xuất hiện được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau, nếu bằng nhau thì lấy cái nào cũng được) sẽ có last_out_CPU_time đều = 0, tiến trình nào được push vào SAU (mới hơn) thì được ưu tiên dequeue trước
+=====================================================
+=====================================================
+
 Xét trường hợp khó nhất -- SRTN, các trường hợp dễ hơn xử lí còn dễ hơn nên ko nói: hiển nhiên khi một tiến trình mới xuất hiện thì phải ưu tiên nó rồi, và nếu có nhiều tiến trình MỚI cùng lúc xuất hiện thì cái nào có arrival trễ hơn được ưu tiên (luật ưu tiên cái mới). Từ khúc này về sau ta không quan tâm các tiến trình mới xuất hiện mà chỉ quan tâm đến tranh chấp giữa các tiến trình trong nội bộ (các) CPU, R
 
 ta đặt vấn đề phức tạp (tổng quát) hơn:
@@ -8,25 +14,14 @@ Cách xử lí:
 -> lý thuyết: ưu tiên cái nào mà thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất đi vào (luật ưu tiên cái cũ), tuy nhiên nếu có P tiến trình có thời-điểm-cuối-cùng-ra-khỏi-CPU = nhau thì cũng ưu tiên cái nào trước cũng được.
 nói thêm: do chỉ có một CPU nên khi một tiến trình trong CPU bị hết timeslice hoặc bị force dừng thì thời-điểm-cuối-cùng-ra-khỏi-CPU của nó cùng vói thời điểm gửi tín hiệu vào ready queue (trễ nhất luôn rồi) nên hiển nhiên nó sẽ bị ưu tiên sau cùng so với tất cả các tiến trình từ I/O qua
 
-(việc ưu tiên cái nào cũng được như này có thể khiến cho thời gian turnaround time hay waiting của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình có thời-điểm-cuối-cùng-ra-khỏi-CPU = nhau như vầy thì bổ sung thêm đơn giản ấy mà)
+(việc ưu tiên cái nào cũng được như này có thể khiến cho turnaround time hay waiting time của các tiến trình ở mỗi tổ hợp là khác nhau, do đó cân nhắc kĩ điều này. Tuy nhiên nếu có điều kiện gì bổ sung giữa các tiến trình có thời-điểm-cuối-cùng-ra-khỏi-CPU = nhau như vầy thì bổ sung thêm đơn giản ấy mà)
 
 code => có thể tạo hashmap "unordered_map<Process*, int> last_out_cpu_time" với tham số int là để lưu thời-điểm-cuối-cùng-ra-khỏi-CPU của tiến trình, còn tham số còn lại là lưu con trỏ tiến trình
 tức cứ mỗi loop while, trong quá trình chạy, khi tiến trình nào ra khỏi CPU (CPU_usage_time = 0 hoặc hết time_slice hoặc bị force dừng) thì insert tiến trình đó và thời điểm hiện tại ngay vào "unordered_map<Process*, int> last_out_cpu_time"
 
-tua lên đầu mỗi loop while, nếu có tiến trình nào gửi yêu cầu vào ready queue thì tìm kết quả tiến trình đó trong map "last_out_cpu_time" rồi add vào "vector<pair<Process*, int>> priority, sort vector priority theo thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất (tức thứ tự thời gian tăng dần), từ đó phần tử đầu tiên khi lấy ra sẽ luôn là tiến trình ra khỏi CPU sớm nhất (tính dùng priority_queue cho cái này nhưng nghĩ kĩ lại thì độ phức tạp ngang nhau vì sau khi add/push vào hết các phần tử thôi thì độ phức tạp cũng là O(N.log(N))). Duyệt vector, add các priority[i].first vào CPU_queue (ready queue)
+tua lên đầu mỗi loop while, add các tiến trình vào "priority_queue<Process*, vector<Process*>, time_comparator> CPU_queue" theo thời-điểm-cuối-cùng-ra-khỏi-CPU sớm nhất (tức thứ tự thời gian tăng dần), từ đó phần tử đầu tiên khi lấy ra sẽ luôn là tiến trình ra khỏi CPU sớm nhất. (mỗi bước add như vậy chỉ có độ phức tạp log(N))
 ====================================================
 ====================================================
-
-Quy tắc ưu tiên cái mới trong mọi thuật toán hoạt động như sau:
-- khi đẩy tiến trình vào ready queue nếu xảy ra conflict thì tiến trình nào có last_out_CPU_time sớm hơn thì được ưu tiên dequeue ra trước (last_out_CPU_time mặc định của 1 tiến trình khi MỚI ĐƯỢC ADD VÀO ta quy ước là 0 -- tức sớm nhất, mục đích khiến nó giành được quyền ưu tiên dequeue nhất). Giải thích: last_out_CPU_time sớm nhất tức là lần cuối nó sử dụng CPU là quá lâu trước đó, do đó khi vào lại thì nó giống như một người mới nhất vậy
-- trong trường hợp có 2 tiến trình mới xuất hiện được push vào ready queue (hiển nhiên là vào 2 thời điểm khác nhau, nếu bằng nhau thì lấy cái nào cũng được) sẽ có last_out_CPU_time đều = 0, tiến trình nào được push vào SAU (mới hơn) thì được ưu tiên dequeue trước
-
-1 
-4
-0 5 3 2 4
-2 7 6 9
-3 3 2 1
-5 5 1 3
 
 // FCFS chỉ có thể conflict ready queue tối đa 2 cái: cái xuất hiện mới (2), cái từ I/O đẩy qua (1)
 // conflict 2 cái giây thứ 6
