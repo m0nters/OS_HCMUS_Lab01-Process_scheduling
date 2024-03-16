@@ -1,7 +1,5 @@
 #include "Header.h"
 
-unordered_map<Process*, int> last_out_CPU_time;
-
 void FCFS(vector<Process>& processes, ostream& os) {
 	int time = 0;
 
@@ -16,19 +14,13 @@ void FCFS(vector<Process>& processes, ostream& os) {
 	Process* current_R_used_process = NULL;
 
 	int finished_processes_num = 0; // the number of the processes that have finished
-	unordered_map<Process*, int> last_put_into_CPU_queue_time; // for waiting time calculation
-	for (int i = 0; i < processes.size(); ++i)
-		last_put_into_CPU_queue_time[&processes[i]] = processes[i].arrival_time;
 
 	int process_count = 0; // optimization: avoid abundant check to add into ready queue, reduce O(n)
 	while (finished_processes_num != processes.size()) {
 		// READY QUEUE CONFLICT RESOLVE
 		for (int i = process_count; i < processes.size(); i++) {
 			if (processes[i].arrival_time == time) {
-				{
-					last_out_CPU_time[&processes[i]] = 0; // let say last time the new process get out of the CPU is 0 as convention (to achieve highest priority)
-					processes[i].priority.time_get_in_CPU_queue = time;
-				}
+				processes[i].priority.last_time_push_in_CPU_queue = time;
 				CPU_queue.push(&processes[i]);
 				++process_count;
 			}
@@ -38,7 +30,7 @@ void FCFS(vector<Process>& processes, ostream& os) {
 		if (!current_CPU_used_process && !CPU_queue.empty()) { // if there isn't any process running in the CPU right now
 			current_CPU_used_process = CPU_queue.top(); // pick the next one waiting in the queue (if the queue is not empty)
 			CPU_queue.pop();
-			current_CPU_used_process->waiting_time += time - last_put_into_CPU_queue_time[current_CPU_used_process];
+			current_CPU_used_process->waiting_time += time - current_CPU_used_process->priority.last_time_push_in_CPU_queue;
 		}
 
 		// take the next process in R_queue to work with
@@ -55,7 +47,7 @@ void FCFS(vector<Process>& processes, ostream& os) {
 			int current_CPU_burst_time = --current_CPU_used_process->CPU_burst_time.front();
 			if (!current_CPU_burst_time) {
 				current_CPU_used_process->CPU_burst_time.pop();
-				last_out_CPU_time[current_CPU_used_process] = time + 1;
+				current_CPU_used_process->priority.last_time_get_out_CPU = time + 1;
 				if (!current_CPU_used_process->resource_usage_time.empty()) // check if there's next R, if have, put into R_ready_queue
 					R_queue.push(current_CPU_used_process);
 				else { // otherwise, the process is done! now we can calculate the turn around time
@@ -79,7 +71,7 @@ void FCFS(vector<Process>& processes, ostream& os) {
 
 			if (!current_R_usage_time) {
 				current_R_used_process->resource_usage_time.pop();
-				last_put_into_CPU_queue_time[current_R_used_process] = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
+				current_R_used_process->priority.last_time_push_in_CPU_queue = time + 1; // for example time is 7 but IN FACT the time the process get out of the R_queue is 8! since we are considering time as BLOCKS!
 				if (!current_R_used_process->CPU_burst_time.empty()) // check if there's next cpu, if have, put into CPU_ready_queue, ALSO CHECK FOR CONFLICT IN THE NEXT SECOND
 					CPU_queue.push(current_R_used_process);
 				else { // otherwise, the process is done! now we can calculate the turn around time
