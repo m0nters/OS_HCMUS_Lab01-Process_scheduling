@@ -1,6 +1,6 @@
-# OS scheduling stategies
+# Process scheduling stategies
 
-This project is about programming 4 OS scheduling's algorithms: FCFS, RR, SJF, SRTN as a Lab01 project at my class
+This project focuses on implementing 4 process scheduling algorithms: First-Come, First-Served (FCFS), Round Robin (RR), Shortest Job First (SJF), and Shortest Remaining Time Next (SRTN). It was assigned as Lab01 project in my class.
 
 ## Table of Contents
 - [Work](#work)
