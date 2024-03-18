@@ -43,15 +43,21 @@ struct Process
 	} priority_attributes;
 };
 
-struct Comparator {
+class Comparator {
 	ComparisonMode mode;
-
+public:
 	Comparator(ComparisonMode mode) : mode(mode) {}
 
 	bool operator()(Process* a, Process* b) {
-		if (mode == TIME_COMPARISON)
+		switch (mode)
+		{
+		case TIME_COMPARISON:
 			if (a->CPU_burst_time.front() != b->CPU_burst_time.front())
 				return a->CPU_burst_time.front() > b->CPU_burst_time.front(); // FIRST PRIORITY: one has smaller CPU burst time
+			break;
+		default: // ORDER_COMPARISON
+			break;
+		}
 
 		// these rules shall be the same for all algorithms
 		if (a->priority_attributes.last_time_push_in_CPU_queue != b->priority_attributes.last_time_push_in_CPU_queue)
