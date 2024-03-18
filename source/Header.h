@@ -15,8 +15,6 @@ enum Algorithm {
 	ROUND_ROBIN,
 	SHORTEST_JOB_FIRST,
 	SHORTEST_REMAINING_TIME_NEXT,
-	PRIROITY_NONPREEMPTIVE,
-	PRIORITY_PREEMPTIVE
 
 	// in case there are other algorithms in the future, add in here
 };
