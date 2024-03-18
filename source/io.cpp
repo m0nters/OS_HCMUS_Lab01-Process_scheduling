@@ -2,7 +2,7 @@
 
 void readFile(istream& is, int& algorithm_type, int& num_of_process, vector <Process>& processes, int& quantum) {
 	is >> algorithm_type;
-	if (algorithm_type == 2) // Neu la Round Robin
+	if (algorithm_type == ROUND_ROBIN)
 		is >> quantum;
 	is >> num_of_process;
 	if (num_of_process > 4) {

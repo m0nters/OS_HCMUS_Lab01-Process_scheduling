@@ -10,7 +10,23 @@
 #include <algorithm>
 using namespace std;
 
-enum ComparisonMode { TIME_COMPARISON, ORDER_COMPARISON }; // in case there's other priority rules in the future, add in here
+enum Algorithm {
+	FIRST_COME_FIRST_SERVED = 1,
+	ROUND_ROBIN,
+	SHORTEST_JOB_FIRST,
+	SHORTEST_REMAINING_TIME_NEXT,
+	PRIROITY_NONPREEMPTIVE,
+	PRIORITY_PREEMPTIVE
+
+	// in case there are other algorithms in the future, add in here
+};
+
+enum ComparisonMode {
+	TIME_COMPARISON,
+	ORDER_COMPARISON
+
+	// in case there's other priority rules in the future, add in here
+};
 
 struct Process
 {
@@ -26,7 +42,7 @@ struct Process
 		int last_time_get_out_CPU = 0; // in case both got pushed into CPU_queue at the same time, the one that got out CPU before first will have higher priority
 
 		// Additional priority-related members can be added here in the future
-	} priority;
+	} priority_attributes;
 };
 
 struct Comparator {
@@ -35,21 +51,15 @@ struct Comparator {
 	Comparator(ComparisonMode mode) : mode(mode) {}
 
 	bool operator()(Process* a, Process* b) {
-		if (mode == TIME_COMPARISON) {
+		if (mode == TIME_COMPARISON)
 			if (a->CPU_burst_time.front() != b->CPU_burst_time.front())
 				return a->CPU_burst_time.front() > b->CPU_burst_time.front(); // FIRST PRIORITY: one has smaller CPU burst time
 
-			if (a->priority.last_time_push_in_CPU_queue != b->priority.last_time_push_in_CPU_queue)
-				return a->priority.last_time_push_in_CPU_queue > b->priority.last_time_push_in_CPU_queue; // SECOND PRIORITY: FIFO rule
+		// these rules shall be the same for all algorithms
+		if (a->priority_attributes.last_time_push_in_CPU_queue != b->priority_attributes.last_time_push_in_CPU_queue)
+			return a->priority_attributes.last_time_push_in_CPU_queue > b->priority_attributes.last_time_push_in_CPU_queue; // FIFO rule (at this point, if there're no above conflicts exist, this is just like normal queue)
 
-			return a->priority.last_time_get_out_CPU > b->priority.last_time_get_out_CPU; // FINAL PRIORITY: if both above are tied, the one that got out CPU first will have higher priority
-		}
-		else if (mode == ORDER_COMPARISON) {
-			if (a->priority.last_time_push_in_CPU_queue != b->priority.last_time_push_in_CPU_queue)
-				return a->priority.last_time_push_in_CPU_queue > b->priority.last_time_push_in_CPU_queue; // FIRST PRIORITY: FIFO rule (at this point, if there's no conflict exists, this is just like normal queue)
-
-			return a->priority.last_time_get_out_CPU > b->priority.last_time_get_out_CPU; // FINAL PRIORITY: if both got pushed into CPU_queue at the same time, the one that got out CPU first will have higher priority
-		}
+		return a->priority_attributes.last_time_get_out_CPU > b->priority_attributes.last_time_get_out_CPU; // if both got pushed into CPU_queue at the same time, the one that got out CPU first before will have higher priority
 	}
 };
 

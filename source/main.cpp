@@ -25,16 +25,16 @@ int main(int argc, char* argv[]) {
 
 	// Perform scheduling based on algorithm type
 	switch (algorithm_type) {
-	case 1:
+	case FIRST_COME_FIRST_SERVED:
 		FCFS(processes, output_file);
 		break;
-	case 2:
+	case ROUND_ROBIN:
 		RR(processes, quantum, output_file);
 		break;
-	case 3:
+	case SHORTEST_JOB_FIRST:
 		SJF(processes, output_file);
 		break;
-	case 4:
+	case SHORTEST_REMAINING_TIME_NEXT:
 		SRTN(processes, output_file);
 		break;
 	default:
